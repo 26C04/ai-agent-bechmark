@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "LineItem": {
+      "additionalProperties": false,
+      "description": "One extracted line item, preserving unreadable values as ``None``.",
+      "properties": {
+        "material": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Material"
+        },
+        "num_pieces": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Num Pieces"
+        },
+        "part_no": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Part No"
+        }
+      },
+      "required": [
+        "part_no",
+        "material",
+        "num_pieces"
+      ],
+      "title": "LineItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Structured extraction result for one production instruction.",
+  "properties": {
+    "customer_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Customer Name"
+    },
+    "delivery_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Delivery Date"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/LineItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "order_no": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Order No"
+    }
+  },
+  "required": [
+    "customer_name",
+    "order_no",
+    "delivery_date",
+    "items"
+  ],
+  "title": "OrderDocument",
+  "type": "object"
+}
