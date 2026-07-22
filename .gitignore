@@ -1,0 +1,33 @@
+# Python / uv
+__pycache__/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+
+# ADR-0001 §5: real data and run outputs must stay outside the repository
+data/
+runs/
+*.env
+
+# Document formats that may contain real production instructions
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+*.bmp
+*.webp
+*.heic
+
+# Ground-truth JSON naming conventions
+gt_*.json
+*_gt.json
+
+# Only explicitly public, synthetic fixtures may use the formats above
+!tests/fixtures/public/
+!tests/fixtures/public/**

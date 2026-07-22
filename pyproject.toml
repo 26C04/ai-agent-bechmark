@@ -39,5 +39,6 @@ files = ["src", "tests", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = ["ollama: requires a real local Ollama server (excluded by default)"]
 addopts = "-m 'not ollama' --cov=ocrbench --cov-report=term-missing --cov-fail-under=80"
