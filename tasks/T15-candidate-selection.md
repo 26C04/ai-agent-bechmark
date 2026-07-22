@@ -61,6 +61,8 @@ def pick_best(candidates: Sequence[CandidateEval]) -> CandidateEval:
     6. prompt_hash の辞書順（最終タイブレーク。決定性保証）
     空列は ValueError。"""
 ```
+- Compatibility: rank a missing warm p50 as positive infinity, below every candidate with a
+  measured warm p50.
 
 - 個別帳票の結果はこの関数に**入力しない**（集計のみで判定 = エージェントに個別結果を返さない
   設計を型で強制する）
