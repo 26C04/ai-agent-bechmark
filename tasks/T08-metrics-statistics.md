@@ -67,16 +67,41 @@ T12 が確定する「帳票 1 件分の結果」を受け取る。T12 完了前
 
 ```python
 class DocResultLike(Protocol):
-    doc_id: str
-    source_kind: str                  # "scan" | "photo"
-    score: DocumentScore
-    first_attempt_status: ParseStatus
-    final_status: ParseStatus
-    attempt_count: int                # 1 or 2
-    warm: bool
-    timings_ms: Mapping[str, float]   # preprocess / load / infer / parse_validate / total
-    tokens: Mapping[str, int]         # prompt / output
-    tokens_per_sec: float | None
+    @property
+    def doc_id(self) -> str: ...
+
+    @property
+    def source_kind(self) -> str: ...  # "scan" | "photo"
+
+    @property
+    def first_attempt_status(self) -> ParseStatus: ...
+
+    @property
+    def final_status(self) -> ParseStatus: ...
+
+    @property
+    def attempt_count(self) -> int: ...  # 1 or 2
+
+    @property
+    def prediction(self) -> Mapping[str, object] | None: ...
+
+    @property
+    def warm(self) -> bool: ...
+
+    @property
+    def timings_ms(self) -> Mapping[str, float]: ...
+
+    @property
+    def tokens(self) -> Mapping[str, int | None]: ...
+
+    @property
+    def tokens_per_sec(self) -> float | None: ...
+
+    @property
+    def needs_review(self) -> bool: ...
+
+    def parsed_score(self) -> DocumentScore:
+        """Restore and return the persisted document score."""
 ```
 
 ```python
@@ -88,13 +113,13 @@ class RunSummary:
     exact_match_ci: tuple[float, float]            # Wilson
     schema_valid_rate: float                       # final_status == OK の率
     first_attempt_json_rate: float                 # first_attempt_status == OK の率
-    after_retry_success_rate: float                # attempt_count == 2 のうち final OK の率（対象 0 件なら None ではなく 1.0 でなく… 下記参照）
+    after_retry_success_rate: float | None         # None when no document was retried
     header_field_accuracy: dict[str, float]
     item_field_accuracy: dict[str, float]          # item_field_counts の合算から
     by_source_kind: dict[str, SourceKindSummary]   # scan / photo 別の n・exact率・schema妥当率
     error_tag_counts: dict[str, int]
-    latency_warm_p50_ms: float
-    latency_warm_p95_ms: float
+    latency_warm_p50_ms: float | None
+    latency_warm_p95_ms: float | None
     mean_timings_ms: dict[str, float]
     token_totals: dict[str, int]
     mean_tokens_per_sec: float | None
@@ -103,6 +128,7 @@ class RunSummary:
 
 - `after_retry_success_rate` は分母 0（再試行が 1 件も無い）のとき `None`（`float | None`）とする
 - p50 / p95 は **warm な帳票の total_ms のみ**を対象にする（ADR §9「ウォーム処理時間の p50 と p95」）
+- If no documents are warm, both warm percentile fields are `None`.
 - 集計は入力順に依存しない（dict は doc_id ソートで構築）
 
 ```python

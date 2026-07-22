@@ -43,6 +43,7 @@ def write_report(run_dir: Path) -> Path:      # load_run → aggregate → rende
 - エラー分類の件数表
 - レイテンシ表: warm p50 / p95、平均内訳（preprocess / load / infer / parse_validate）、
   **30 秒制約（ADR §7）超過の帳票数**
+- Compatibility: render a missing warm percentile as `N/A`; serialize it as JSON `null`.
 - token 表: prompt / output 合計と平均、tokens/sec 平均
 
 決定性の規則:
