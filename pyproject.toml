@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ocrbench"
+version = "0.1.0"
+description = "Local OCR benchmark foundation for production instructions."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ollama>=0.6.1",
+    "pillow>=12.1.0",
+    "pydantic>=2.12.5",
+    "pypdfium2>=5.4.0",
+]
+
+[project.scripts]
+ocrbench = "ocrbench.cli:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.14",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests", "scripts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["ollama: requires a real local Ollama server (excluded by default)"]
+addopts = "-m 'not ollama' --cov=ocrbench --cov-report=term-missing --cov-fail-under=80"
