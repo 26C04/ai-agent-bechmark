@@ -15,6 +15,7 @@ pre-commit:
       stage_fixed: true
       priority: 3
 
+# Keep these four commands synchronized with .github/workflows/ci.yml.
 pre-push:
   parallel: true
   commands:

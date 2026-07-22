@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9
+        with:
+          python-version: "3.14"
+      # Verify that uv.lock matches pyproject.toml before installing dependencies.
+      - run: uv lock --check
+      - run: uv sync --locked
+      # Keep these four quality commands synchronized with lefthook.yml pre-push.
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      # pytest addopts excludes the ollama marker; CI never requires real Ollama.
+      - run: uv run pytest
