@@ -20,5 +20,17 @@ uv run pytest
 uv run pytest -m ollama --no-cov
 ```
 
+## Git hooks
+
+[Lefthook](https://github.com/evilmartians/lefthook) をローカルへ導入した後、リポジトリ直下で
+フックを有効化します。
+
+```powershell
+lefthook install
+```
+
+pre-commitでは機密データ混入ガードとRuffの自動修正・整形、pre-pushではRuff、Mypy、pytestが
+実行されます。
+
 設計判断は [ADR-0001](adr/0001-local-ocr-benchmark-architecture.md)、実装順と各タスクの契約は
 [タスクリスト](tasks/README.md)を参照してください。

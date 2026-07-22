@@ -1,0 +1,29 @@
+pre-commit:
+  parallel: false
+  commands:
+    guard-secrets:
+      run: uv run python scripts/guard_staged_files.py
+      priority: 1
+    ruff-fix:
+      glob: "*.py"
+      run: uv run ruff check --fix {staged_files}
+      stage_fixed: true
+      priority: 2
+    ruff-format:
+      glob: "*.py"
+      run: uv run ruff format {staged_files}
+      stage_fixed: true
+      priority: 3
+
+# Keep these four commands synchronized with .github/workflows/ci.yml.
+pre-push:
+  parallel: true
+  commands:
+    ruff-check:
+      run: uv run ruff check .
+    ruff-format-check:
+      run: uv run ruff format --check .
+    mypy:
+      run: uv run mypy
+    pytest:
+      run: uv run pytest
