@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import NoReturn
 
 import pytest
-from helpers import make_pdf_bytes
 from PIL import Image
 
 from ocrbench.config import OcrBenchError
@@ -17,6 +16,7 @@ from ocrbench.preprocess import (
     PreprocessResult,
     preprocess,
 )
+from tests.helpers import make_pdf_bytes
 
 
 def _open_result(result: PreprocessResult) -> Image.Image:
@@ -41,7 +41,9 @@ def test_preprocess_one_page_letter_pdf_at_300_dpi(tmp_path: Path) -> None:
         assert output.mode == "RGB"
 
 
-def test_preprocess_applies_exif_orientation_and_removes_metadata(tmp_path: Path) -> None:
+def test_preprocess_applies_exif_orientation_and_removes_metadata(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "oriented.JpEg"
     exif = Image.Exif()
     exif[0x0112] = 6
@@ -75,7 +77,9 @@ def test_preprocess_removes_icc_profile_from_jpeg_output(tmp_path: Path) -> None
         assert output.size == (11, 7)
 
 
-def test_preprocess_removes_png_transparency_and_icc_metadata(tmp_path: Path) -> None:
+def test_preprocess_removes_png_transparency_and_icc_metadata(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "metadata.png"
     profile = b"profile-secret"
     palette = [10, 20, 30] + [0, 0, 0] * 255
@@ -223,7 +227,10 @@ def test_pillow_images_close_when_png_encoding_fails(
         original_close(image)
 
     def fail_save(
-        _image: Image.Image, _file: object, _format: str | None = None, **_params: object
+        _image: Image.Image,
+        _file: object,
+        _format: str | None = None,
+        **_params: object,
     ) -> NoReturn:
         raise RuntimeError("encoding failed")
 
