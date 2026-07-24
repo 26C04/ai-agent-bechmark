@@ -167,10 +167,8 @@ def _write_new_version(path: Path, text: str) -> bool:
             stream.flush()
             os.fsync(stream.fileno())
     except (OSError, UnicodeError) as error:
-        try:
+        with suppress(OSError):
             path.unlink(missing_ok=True)
-        except OSError:
-            pass
         raise PromptRegistryError(f"cannot write prompt version {path.name}: {error}") from error
     return True
 
@@ -347,10 +345,8 @@ def _write_active(directory: Path, name: str, hash12: str) -> None:
             os.fsync(stream.fileno())
         os.replace(temporary, active)
     except (OSError, UnicodeError) as error:
-        try:
+        with suppress(OSError):
             temporary.unlink(missing_ok=True)
-        except OSError:
-            pass
         raise PromptRegistryError(
             f"cannot atomically update active marker for {name!r}: {error}"
         ) from error
@@ -534,6 +530,7 @@ def lint_prompt(text: str) -> list[str]:
         warnings.append("Possible absolute coordinate instruction detected (ADR §7).")
     if re.search(r"example|例[:\uFF1A]", text, flags=re.IGNORECASE):
         warnings.append(
-            "Few-shot examples may not contain real values; confirm any example is synthetic (ADR §7)."
+            "Few-shot examples may not contain real values; confirm any example is "
+            "synthetic (ADR §7)."
         )
     return warnings
