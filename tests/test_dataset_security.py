@@ -121,8 +121,9 @@ def test_sources_changed_after_preflight_are_aggregated_before_any_move(
         (root_path / "raw" / "content.png").write_bytes(b"content-after")
         identity_path = root_path / "raw" / "identity.jpg"
         unchanged_bytes = identity_path.read_bytes()
-        identity_path.unlink()
-        identity_path.write_bytes(unchanged_bytes)
+        replacement_path = root_path / "raw" / "identity-replacement.jpg"
+        replacement_path.write_bytes(unchanged_bytes)
+        os.replace(replacement_path, identity_path)
         return result
 
     move_calls = 0
