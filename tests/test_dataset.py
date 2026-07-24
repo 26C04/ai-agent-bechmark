@@ -235,7 +235,7 @@ def test_load_manifest_rejects_raw_symlink_escape(tmp_path: Path) -> None:
     except OSError as error:
         pytest.skip(f"symlink creation is unavailable: {error}")
 
-    with pytest.raises(DatasetError, match="escapes the raw/ directory"):
+    with pytest.raises(DatasetError, match=r"symlink or reparse alias"):
         load_manifest(root)
 
 
