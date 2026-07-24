@@ -367,7 +367,7 @@ def _process_lock(root: Path, name: str) -> Iterator[None]:
             os.write(descriptor, b"0")
         os.lseek(descriptor, 0, os.SEEK_SET)
         if os.name == "nt":
-            import msvcrt
+            msvcrt = __import__("msvcrt")
 
             deadline = time.monotonic() + 30.0
             while True:
@@ -399,7 +399,7 @@ def _process_lock(root: Path, name: str) -> Iterator[None]:
     finally:
         try:
             if os.name == "nt":
-                import msvcrt
+                msvcrt = __import__("msvcrt")
 
                 os.lseek(descriptor, 0, os.SEEK_SET)
                 msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
