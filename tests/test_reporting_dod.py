@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+import ocrbench.reporting as reporting_module
 from ocrbench.dataset import Manifest, dataset_fingerprint
 from ocrbench.metrics import aggregate
 from ocrbench.reporting import (
@@ -17,6 +18,8 @@ from ocrbench.reporting import (
     write_detail_report,
 )
 from ocrbench.results import RunResults
+from ocrbench.schema import OrderDocument
+from ocrbench.splitguard import DetailReportAccessError
 from tests.test_reporting import _document, _result, _run, _write_run
 
 
@@ -137,6 +140,42 @@ def test_write_detail_report_loads_a_local_run_and_ground_truth(
 
     assert destination == run_dir / "report_detail.md"
     assert "Synthetic Customer" in destination.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("split", ["selection", "final"])
+def test_write_detail_report_rejects_blind_splits_before_gt_access_or_write(
+    split: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runs_root = tmp_path / "runs"
+    runs_root.mkdir()
+    monkeypatch.setenv("OCRBENCH_RUNS_DIR", str(runs_root))
+    base_run = _run()
+    restricted_manifest = base_run.manifest.model_copy(update={"split": split})
+    restricted_run = base_run.model_copy(update={"manifest": restricted_manifest})
+    run_dir = _write_run(runs_root, restricted_run)
+    data_root = tmp_path / "must-not-be-read"
+
+    def fail_gt_access(
+        results: RunResults,
+        requested_data_root: Path,
+    ) -> dict[str, OrderDocument]:
+        raise AssertionError(
+            f"GT access must not occur for {results.manifest.split}: {requested_data_root}"
+        )
+
+    def fail_write(path: Path, content: str) -> None:
+        raise AssertionError(f"detail output must not be written: {path}: {content}")
+
+    monkeypatch.setattr(reporting_module, "_ground_truth_for_run", fail_gt_access)
+    monkeypatch.setattr(reporting_module, "_atomic_write_text", fail_write)
+
+    with pytest.raises(DetailReportAccessError, match="Development"):
+        write_detail_report(run_dir, data_root)
+
+    assert not data_root.exists()
+    assert not (run_dir / "report_detail.md").exists()
 
 
 def test_write_detail_report_rejects_a_run_outside_the_configured_root(

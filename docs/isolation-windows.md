@@ -23,7 +23,11 @@ net user finaltest
 
 Do not add `finaltest` to `Administrators`. Do not reuse the development user's
 password or credentials. Record account ownership and recovery information in
-the laboratory's approved secret-management system.
+the laboratory's approved secret-management system. The development and agent
+execution accounts must also be standard users, not members of
+`Administrators`. They must not be able to elevate without approval from a
+separate human administrator because an elevated administrator token can access
+the protected directories.
 
 ## 2. Prepare and protect the Final-test directories
 
@@ -104,6 +108,8 @@ icacls "D:\OCRBench\final-runs" /verify
 actual development and agent accounts are the effective-access tests. Do not
 proceed if either account can list, read, write, change permissions on, or take
 ownership of either directory through its normal execution token.
+Also confirm that neither account can elevate without approval from a separate
+human administrator.
 
 ## 5. Verify the software confirmation gate
 
@@ -152,6 +158,8 @@ account.
 - [ ] Inherited ACLs are removed and only `finaltest` and administrators have
       access.
 - [ ] The development and agent accounts receive `Access is denied`.
+- [ ] The development and agent accounts are non-administrators and cannot
+      elevate without separate human administrator approval.
 - [ ] The Final manifest and fingerprint are fixed.
 - [ ] Ground truth has been independently checked against the source documents.
 - [ ] The model digest and prompt hash match the pre-registered configuration.
