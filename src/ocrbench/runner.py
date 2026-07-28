@@ -34,6 +34,7 @@ from ocrbench.prompts import PromptVersion
 from ocrbench.results import DocumentResult, RunManifest, RunResults, serialize_score
 from ocrbench.schema import OrderDocument, compute_needs_review, ollama_format_schema
 from ocrbench.scoring import score_document
+from ocrbench.splitguard import ensure_final_allowed
 
 WARM_THRESHOLD_NS: Final[int] = 1_000_000_000
 _TEMPERATURE: Final[float] = 0.0
@@ -480,8 +481,11 @@ def run_benchmark(
     prompt: PromptVersion,
     runs_root: Path,
     run_id: str | None = None,
+    confirm_final_flag: bool = False,
 ) -> Path:
     """Execute one deterministic run and return its safely published directory."""
+    if split == "final":
+        ensure_final_allowed(confirm_final_flag=confirm_final_flag)
     if model_tag not in config.ALLOWED_MODELS:
         raise RunnerError(f"Model tag is not allowed: {model_tag!r}")
 

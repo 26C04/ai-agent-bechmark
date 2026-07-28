@@ -21,6 +21,7 @@ from ocrbench.dataset import DatasetError, dataset_fingerprint, load_manifest
 from ocrbench.metrics import RunSummary, aggregate, item_field_bootstrap_ci
 from ocrbench.results import RunManifest, RunResults, load_run
 from ocrbench.schema import OrderDocument
+from ocrbench.splitguard import ensure_detail_report_allowed
 
 _HEADER_FIELDS = ("customer_name", "order_no", "delivery_date")
 _ITEM_FIELDS = ("part_no", "material", "num_pieces")
@@ -324,6 +325,7 @@ def write_detail_report(run_dir: Path, data_root: Path) -> Path:
     """Load a run and its local GT documents, then write ``report_detail.md``."""
     directory = Path(run_dir)
     results = load_run(directory)
+    ensure_detail_report_allowed(results.manifest.split)
     _require_external_run_directory(directory)
     gt_by_doc = _ground_truth_for_run(results, Path(data_root))
     destination = directory / "report_detail.md"
