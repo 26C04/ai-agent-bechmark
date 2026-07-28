@@ -52,6 +52,7 @@ from ocrbench.selection import (
     update_after_candidate,
     update_after_error,
 )
+from ocrbench.smoke import format_smoke_result, run_smoke
 from ocrbench.splitguard import (
     Split,
     SplitGuardError,
@@ -62,7 +63,7 @@ from ocrbench.splitguard import (
 )
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-_Handler = Callable[[argparse.Namespace], None]
+_Handler = Callable[[argparse.Namespace], int | None]
 _RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _EXECUTION_COMPATIBILITY_FIELDS = (
     "preprocess_version",
@@ -272,6 +273,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="confirm Final access; OCRBENCH_ALLOW_FINAL=1 is also required",
     )
     run.set_defaults(handler=_handle_run)
+
+    smoke = _leaf(
+        commands,
+        "smoke",
+        shared=shared,
+        help_text="diagnose one local model against one image or PDF",
+    )
+    smoke.add_argument("--model", required=True, help="exact local Ollama model tag")
+    smoke.add_argument("--image", type=Path, required=True, help="one image or PDF to inspect")
+    smoke.add_argument(
+        "--prompt-name",
+        default="base",
+        help="active prompt registry name (default: base)",
+    )
+    smoke.add_argument(
+        "--allow-any-model",
+        action="store_true",
+        help="diagnostic-only: allow a model outside the approved benchmark allowlist",
+    )
+    smoke.set_defaults(handler=_handle_smoke)
 
     report = _leaf(
         commands,
@@ -504,6 +525,38 @@ def _handle_run(arguments: argparse.Namespace) -> None:
         payload = {"n_docs": summary.n_docs, "run_dir": str(run_dir), "split": split}
         human = f"{console_summary_for(split, summary)}\nRun directory: {run_dir}"
     _emit(arguments, payload, human)
+
+
+def _handle_smoke(arguments: argparse.Namespace) -> int:
+    """Run one diagnostic OCR attempt without creating benchmark artifacts."""
+    model_tag = cast(str, arguments.model)
+    allow_any_model = bool(arguments.allow_any_model)
+    if model_tag not in config.ALLOWED_MODELS and not allow_any_model:
+        raise _CliInputError(f"model tag is not allowlisted: {model_tag!r}")
+
+    prompt = get_active(_prompt_registry_root(), arguments.prompt_name)
+    adapter = create_adapter()
+    result = run_smoke(
+        adapter=adapter,
+        model_tag=model_tag,
+        image_path=arguments.image,
+        prompt=prompt,
+        allow_any_model=allow_any_model,
+    )
+    payload = result.to_dict()
+    human = format_smoke_result(result)
+    if not result.model_allowlisted:
+        warning = (
+            "WARNING: DIAGNOSTIC-ONLY smoke mode is enabled. This result is not approved "
+            "for benchmark, comparison, or publication."
+        )
+        payload["diagnostic_only_warning"] = warning
+        human = f"{warning}\n{human}"
+    if not result.succeeded:
+        payload["exit_code"] = 1
+        payload["status"] = "error"
+    _emit(arguments, payload, human)
+    return 0 if result.succeeded else 1
 
 
 def _handle_report(arguments: argparse.Namespace) -> None:
@@ -837,8 +890,8 @@ def main(argv: list[str] | None = None) -> int:
         handler = cast(_Handler | None, getattr(arguments, "handler", None))
         if handler is None:
             raise _CliInputError("a command and subcommand are required")
-        handler(arguments)
-        return 0
+        handler_exit = handler(arguments)
+        return 0 if handler_exit is None else handler_exit
     except _ParserExit as error:
         return error.status
     except (
