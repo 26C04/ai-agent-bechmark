@@ -13,6 +13,9 @@ data/
 runs/
 *.env
 
+# Prompt registry advisory locks are runtime state, not prompt versions.
+/prompts/.ocrbench-*.lock
+
 # Document formats that may contain real production instructions
 *.pdf
 *.jpg
